@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+
+{% block title %}Crop Disease Classification and Cure Suggestion - About{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card">
+            <div class="card-header text-center">
+                <h4 class="mb-0"><i class="fas fa-info-circle me-2"></i> About Crop Disease Classification and Cure Suggestion</h4>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-4 text-center mb-3 mb-md-0">
+                        <i class="fas fa-leaf" style="font-size: 5rem; color: var(--primary-color);"></i>
+                    </div>
+                    <div class="col-md-8">
+                        <h5>Crop Disease Classification and Cure Suggestion</h5>
+                        <p class="text-muted">
+                            Crop Disease Classification and Cure Suggestion is a deep learning-based application developed to identify crop diseases from plant leaf images and provide suitable cure suggestions.This project does NOT use external APIs. Instead, we trained a YOLOv8 classification model directly on the PlantVillage dataset. The trained model (best.pt) is used for disease classification and prediction.The system classifies the crop disease and provides detailed information including description, symptoms, treatment methods, and prevention techniques.
+                        </p>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <h5 class="mb-3">Features</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="d-flex">
+                            <div class="me-3">
+                                <i class="fas fa-search" style="font-size: 1.5rem; color: var(--primary-color);"></i>
+                            </div>
+                            <div>
+                                <h6>Real-time Disease Detection</h6>
+                                <p class="text-muted">Instantly analyze plant leaves for signs of disease</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="d-flex">
+                            <div class="me-3">
+                                <i class="fas fa-seedling" style="font-size: 1.5rem; color: var(--primary-color);"></i>
+                            </div>
+                            <div>
+                                <h6>Multiple Crop Support</h6>
+                                <p class="text-muted">Works with various crops including Apple, Tomato, Potato, and more</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="d-flex">
+                            <div class="me-3">
+                                <i class="fas fa-info-circle" style="font-size: 1.5rem; color: var(--primary-color);"></i>
+                            </div>
+                            <div>
+                                <h6>Detailed Information</h6>
+                                <p class="text-muted">Get comprehensive disease information and treatment recommendations</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="d-flex">
+                            <div class="me-3">
+                                <i class="fas fa-mobile-alt" style="font-size: 1.5rem; color: var(--primary-color);"></i>
+                            </div>
+                            <div>
+                                <h6>Cross-Platform Compatibility</h6>
+                                <p class="text-muted">Works on both desktop and mobile devices</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <h5 class="mb-3">How It Works</h5>
+                <div class="row mb-4">
+                    <div class="col-md-3 mb-3 mb-md-0 text-center">
+                        <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                            <i class="fas fa-camera" style="font-size: 2rem; color: var(--primary-color);"></i>
+                        </div>
+                        <h6 class="mt-2">Capture</h6>
+                        <p class="small text-muted">Take or upload a photo of the plant leaf</p>
+                    </div>
+                    <div class="col-md-3 mb-3 mb-md-0 text-center">
+                        <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                            <i class="fas fa-cogs" style="font-size: 2rem; color: var(--primary-color);"></i>
+                        </div>
+                        <h6 class="mt-2">Process</h6>
+                        <p class="small text-muted">Our AI model analyzes the image</p>
+                    </div>
+                    <div class="col-md-3 mb-3 mb-md-0 text-center">
+                        <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                            <i class="fas fa-search" style="font-size: 2rem; color: var(--primary-color);"></i>
+                        </div>
+                        <h6 class="mt-2">Detect</h6>
+                        <p class="small text-muted">Classifies the disease using a trained deep learning model</p>
+                    </div>
+                    <div class="col-md-3 mb-3 mb-md-0 text-center">
+                        <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                            <i class="fas fa-clipboard-list" style="font-size: 2rem; color: var(--primary-color);"></i>
+                        </div>
+                        <h6 class="mt-2">Report</h6>
+                        <p class="small text-muted">Provides detailed analysis and recommendations</p>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <h5 class="mb-3">Technology</h5>
+                <p>
+                    Our application uses YOLOv8, a state-of-the-art object detection model, to identify and localize plant diseases. The model has been trained on a diverse dataset of plant leaves with various diseases, enabling it to accurately detect and classify multiple crop diseases.
+                </p>
+                <p>
+                    The system processes images at a resolution of 480x480 pixels, optimizing for both accuracy and performance across different devices. For images of other sizes, the application automatically resizes them while preserving the aspect ratio.
+                </p>
+                
+                <hr>
+                
+  m              <h5 class="mb-3">Sustainability</h5>
+                <div class="row mb-4">
+                    <div class="col-md-6 mb-3">
+                        <div class="d-flex">
+                            <div class="me-3">
+                                <i class="fas fa-leaf" style="font-size: 1.5rem; color: var(--primary-color);"></i>
+                            </div>
+                            <div>
+                                <h6>Reduced Pesticide Usage</h6>
+                                <p class="text-muted">Early disease detection helps minimize chemical treatments, promoting eco-friendly farming practices</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="d-flex">
+                            <div class="me-3">
+                                <i class="fas fa-tint" style="font-size: 1.5rem; color: var(--primary-color);"></i>
+                            </div>
+                            <div>
+                                <h6>Resource Conservation</h6>
+                                <p class="text-muted">Timely interventions reduce water and resource waste by preventing widespread crop damage</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="d-flex">
+                            <div class="me-3">
+                                <i class="fas fa-seedling" style="font-size: 1.5rem; color: var(--primary-color);"></i>
+                            </div>
+                            <div>
+                                <h6>Increased Crop Yield</h6>
+                                <p class="text-muted">Protecting plant health leads to better harvests and reduced food waste</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="d-flex">
+                            <div class="me-3">
+                                <i class="fas fa-globe" style="font-size: 1.5rem; color: var(--primary-color);"></i>
+                            </div>
+                            <div>
+                                <h6>Climate-Smart Agriculture</h6>
+                                <p class="text-muted">Supporting sustainable farming practices that adapt to changing environmental conditions</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <h5 class="mb-3">Developers</h5>
+                <div class="row mb-4">
+                    <div class="col-md-6 mb-3">
+                        <div class="d-flex">
+                            <div class="me-3">
+                                <i class="fas fa-user-graduate" style="font-size: 1.5rem; color: var(--primary-color);"></i>
+                            </div>
+                            <div>
+                                <h6>B VENKATA ANIL KUMAR</h6>
+                                <p class="text-muted">BTECH 3rd year</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="d-flex">
+                            <div class="me-3">
+                                <i class="fas fa-user-graduate" style="font-size: 1.5rem; color: var(--primary-color);"></i>
+                            </div>
+                            <div>
+                                <h6>A POOJA SAMANVITHA</h6>
+                                <p class="text-muted">BTECH 3rd year</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="text-center mt-4">
+                    <a href="/" class="btn btn-primary">
+                        <i class="fas fa-arrow-left me-2"></i> Back to Home
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

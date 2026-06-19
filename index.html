@@ -1,0 +1,482 @@
+{% extends "base.html" %}
+
+{% block title %}Crop Disease Classification and Cure Suggestion - Home{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Left Panel - Controls -->
+    <div class="col-md-4 mb-4">
+        <!-- Upload Section -->
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-image me-2"></i> Image Input
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button id="upload-btn" class="btn btn-primary">
+                        <i class="fas fa-file-upload me-2"></i> Upload Image
+                    </button>
+                    <input type="file" id="file-input" accept="image/*" style="display: none;">
+                    
+                    <button id="camera-btn" class="btn btn-primary">
+                        <i class="fas fa-camera me-2"></i> Capture Image
+                    </button>
+                    
+                    <button id="process-btn" class="btn btn-success" disabled>
+                        <i class="fas fa-search me-2"></i> Detect Disease
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- How It Works Section -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <i class="fas fa-question-circle me-2"></i> How It Works
+            </div>
+            <div class="card-body">
+                <ol class="mb-0">
+                    <li>Upload or capture an image of a plant leaf</li>
+                    <li>Click 'Detect Disease' to analyze</li>
+                    <li>View detailed results and recommendations</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Right Panel - Image and Results -->
+    <div class="col-md-8">
+        <!-- Image Display -->
+        <div class="card">
+            <div class="card-header text-center">
+                <i class="fas fa-leaf me-2"></i> Plant Image
+            </div>
+            <div class="card-body">
+                <div class="image-preview" id="image-preview">
+                    <div class="placeholder-content" id="placeholder-content">
+                        <i class="fas fa-leaf placeholder-icon"></i>
+                        <p>No image selected<br>Upload or capture an image to begin</p>
+                    </div>
+                </div>
+                
+                <!-- Camera View (Hidden by default) -->
+                <div class="camera-container" id="camera-container" style="display: none;">
+                    <video id="camera-view" autoplay playsinline></video>
+                    <div class="camera-controls">
+                        <button id="capture-btn" class="btn btn-primary">
+                            <i class="fas fa-camera me-2"></i> Take Photo
+                        </button>
+                        <button id="cancel-camera-btn" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i> Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Results Display -->
+        <div class="card mt-4">
+            <div class="card-header text-center">
+                <i class="fas fa-chart-bar me-2"></i> Analysis Results
+            </div>
+            <div class="card-body">
+                <div id="results-container">
+                    <div class="text-center text-muted">
+                        <p>No analysis results yet</p>
+                        <p>Upload an image and click 'Detect Disease' to analyze</p>
+                    </div>
+                </div>
+                <div id="loading-indicator" style="display: none;" class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Processing image...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // DOM Elements
+    const uploadBtn = document.getElementById('upload-btn');
+    const fileInput = document.getElementById('file-input');
+    const cameraBtn = document.getElementById('camera-btn');
+    const processBtn = document.getElementById('process-btn');
+    const imagePreview = document.getElementById('image-preview');
+    const placeholderContent = document.getElementById('placeholder-content');
+    const resultsContainer = document.getElementById('results-container');
+    const loadingIndicator = document.getElementById('loading-indicator');
+    const cameraContainer = document.getElementById('camera-container');
+    const cameraView = document.getElementById('camera-view');
+    const captureBtn = document.getElementById('capture-btn');
+    const cancelCameraBtn = document.getElementById('cancel-camera-btn');
+    
+    // Variables
+    let currentImage = null;
+    let stream = null;
+    let currentResult = null;
+    
+    // Event Listeners
+    // Event Listeners
+    uploadBtn.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', handleFileUpload);
+    processBtn.addEventListener('click', processImage);
+    cameraBtn.addEventListener('click', startCamera);
+    captureBtn.addEventListener('click', captureImage);
+    cancelCameraBtn.addEventListener('click', stopCamera);
+    
+    // Add event listener for save button (will be added dynamically)
+    document.addEventListener('click', function(e) {
+        if (e.target && e.target.id === 'save-detection-btn' || 
+            (e.target.parentElement && e.target.parentElement.id === 'save-detection-btn')) {
+            saveDetection();
+        }
+    });
+    
+    // Functions
+    function handleFileUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            displayImage(e.target.result);
+            currentImage = e.target.result;
+            processBtn.disabled = false;
+        };
+        reader.readAsDataURL(file);
+    }
+    
+    function displayImage(src) {
+        // Clear placeholder and show image
+        placeholderContent.style.display = 'none';
+        
+        // Remove any existing image
+        const existingImg = imagePreview.querySelector('img');
+        if (existingImg) existingImg.remove();
+        
+        // Create and add new image
+        const img = document.createElement('img');
+        img.src = src;
+        img.alt = 'Uploaded plant image';
+        imagePreview.appendChild(img);
+        
+        // Show image preview, hide camera
+        imagePreview.style.display = 'flex';
+        cameraContainer.style.display = 'none';
+    }
+    
+    function processImage() {
+        if (!currentImage) return;
+        
+        // Show loading indicator
+        resultsContainer.style.display = 'none';
+        loadingIndicator.style.display = 'block';
+        processBtn.disabled = true;
+        
+        // Determine if the image is from camera or file upload
+        const endpoint = currentImage.startsWith('data:image/png;base64,') ? '/capture' : '/upload';
+        
+        if (endpoint === '/capture') {
+            // Send base64 image to server
+            fetch('/capture', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ image: currentImage.split(',')[1] })
+            })
+            .then(response => response.json())
+            .then(data => displayResults(data))
+            .catch(error => {
+                console.error('Error:', error);
+                displayError('An error occurred during processing');
+            });
+        } else {
+            // Create FormData and append file
+            const formData = new FormData();
+            const blob = dataURItoBlob(currentImage);
+            formData.append('file', blob, 'image.png');
+            
+            // Send to server
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => displayResults(data))
+            .catch(error => {
+                console.error('Error:', error);
+                displayError('An error occurred during processing');
+            });
+        }
+    }
+    
+    function displayResults(data) {
+        // Hide loading indicator
+        loadingIndicator.style.display = 'none';
+        resultsContainer.style.display = 'block';
+        processBtn.disabled = false;
+        
+        if (!data.success || data.error) {
+            displayError(data.error || 'No disease detected or error in processing');
+            return;
+        }
+        
+        // Store current result for saving
+        currentResult = data.result;
+        
+        const result = data.result;
+        const confidence = result.confidence * 100;
+        let confidenceLevel, confidenceColor, confidenceClass;
+        
+        if (confidence > 80) {
+            confidenceLevel = 'High';
+            confidenceColor = '#27ae60';
+            confidenceClass = 'high-confidence';
+        } else if (confidence > 60) {
+            confidenceLevel = 'Medium';
+            confidenceColor = '#f39c12';
+            confidenceClass = 'medium-confidence';
+        } else {
+            confidenceLevel = 'Low';
+            confidenceColor = '#e74c3c';
+            confidenceClass = 'low-confidence';
+        }
+        
+        // Create HTML for results
+        let html = `
+            <div class="row mb-3">
+                <!-- Left side: Image with detection boxes -->
+                <div class="col-md-5">
+                    <div class="card h-100">
+                        <div class="card-body p-2 text-center">
+                            <h5 class="card-title">Disease Detection</h5>
+                            <div class="detection-image-container">
+                                <img src="data:image/png;base64,${data.image_with_boxes}" 
+                                     alt="Detected disease" class="img-fluid detection-image">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right side: Disease info -->
+                <div class="col-md-7">
+                    <div class="result-card p-3 ${confidenceClass}">
+                        <h4 class="mb-2">${result.disease_name}</h4>
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="progress flex-grow-1 me-2" style="height: 8px;">
+                                <div class="progress-bar confidence-bar" 
+                                     role="progressbar" 
+                                     style="width: ${confidence}%; background-color: ${confidenceColor};" 
+                                     aria-valuenow="${confidence}" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100"></div>
+                            </div>
+                            <span style="color: ${confidenceColor}; font-weight: bold;">
+                                ${confidence.toFixed(1)}% - ${confidenceLevel} Confidence
+                            </span>
+                        </div>
+                        <div class="text-end">
+                            <button id="save-detection-btn" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-save me-1"></i> Save to History
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Description</h5>
+                    <p class="card-text">${result.info.description}</p>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Symptoms</h5>
+                            <ul class="mb-0">
+                                ${result.info.symptoms.length > 0 ? 
+                                  result.info.symptoms.map(s => `<li>${s}</li>`).join('') : 
+                                  '<li>No symptoms information available</li>'}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Treatment</h5>
+                            <ul class="mb-0">
+                                ${result.info.treatment.length > 0 ? 
+                                  result.info.treatment.map(t => `<li>${t}</li>`).join('') : 
+                                  '<li>No treatment information available</li>'}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Prevention</h5>
+                    <ul class="mb-0">
+                        ${result.info.prevention.length > 0 ? 
+                          result.info.prevention.map(p => `<li>${p}</li>`).join('') : 
+                          '<li>No prevention information available</li>'}
+                    </ul>
+                </div>
+            </div>
+        `;
+        
+        resultsContainer.innerHTML = html;
+    }
+    
+    function displayError(message) {
+        resultsContainer.innerHTML = `
+            <div class="text-center p-4">
+                <div class="text-danger mb-3" style="font-size: 3rem;">⚠️</div>
+                <h4 class="text-danger">No Disease Detected</h4>
+                <p class="text-muted">${message}</p>
+                <p class="text-muted">Try uploading a clearer image or ensure the leaf is properly visible.</p>
+            </div>
+        `;
+        resultsContainer.style.display = 'block';
+        processBtn.disabled = false;
+    }
+    
+    function startCamera() {
+        // Hide image preview, show camera
+        imagePreview.style.display = 'none';
+        cameraContainer.style.display = 'block';
+        
+        // Access camera
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+            .then(function(mediaStream) {
+                stream = mediaStream;
+                cameraView.srcObject = mediaStream;
+            })
+            .catch(function(error) {
+                console.error('Error accessing camera:', error);
+                alert('Could not access the camera. Please ensure camera permissions are granted.');
+                stopCamera();
+            });
+    }
+    
+    function captureImage() {
+        if (!stream) return;
+        
+        // Create canvas to capture frame
+        const canvas = document.createElement('canvas');
+        canvas.width = cameraView.videoWidth;
+        canvas.height = cameraView.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(cameraView, 0, 0, canvas.width, canvas.height);
+        
+        // Convert to data URL
+        const imageDataUrl = canvas.toDataURL('image/png');
+        currentImage = imageDataUrl;
+        
+        // Display captured image
+        displayImage(imageDataUrl);
+        processBtn.disabled = false;
+        
+        // Stop camera
+        stopCamera();
+    }
+    
+    function stopCamera() {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+        }
+        
+        // Hide camera, show image preview (or placeholder)
+        cameraContainer.style.display = 'none';
+        imagePreview.style.display = 'flex';
+    }
+    
+    // Helper function to convert data URI to Blob
+    function dataURItoBlob(dataURI) {
+        const byteString = atob(dataURI.split(',')[1]);
+        const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+        const ab = new ArrayBuffer(byteString.length);
+        const ia = new Uint8Array(ab);
+        
+        for (let i = 0; i < byteString.length; i++) {
+            ia[i] = byteString.charCodeAt(i);
+        }
+        
+        return new Blob([ab], { type: mimeString });
+    }
+
+    // Add the saveDetection function
+    function saveDetection() {
+        if (!currentResult || !currentImage) {
+            alert('No detection result to save');
+            return;
+        }
+        
+        // Disable save button to prevent multiple clicks
+        const saveBtn = document.getElementById('save-detection-btn');
+        if (saveBtn) {
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Saving...';
+        }
+        
+        // Send data to server
+        fetch('/save_detection', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                result: currentResult,
+                image: currentImage
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show success message
+                alert('Detection saved successfully!');
+                
+                // Add link to view history
+                if (saveBtn) {
+                    saveBtn.innerHTML = '<i class="fas fa-check me-1"></i> Saved';
+                    saveBtn.classList.remove('btn-outline-primary');
+                    saveBtn.classList.add('btn-success');
+                    
+                    // Add view history button
+                    const viewBtn = document.createElement('a');
+                    viewBtn.href = '/history/' + data.id;
+                    viewBtn.className = 'btn btn-sm btn-primary ms-2';
+                    viewBtn.innerHTML = '<i class="fas fa-eye me-1"></i> View';
+                    saveBtn.parentNode.appendChild(viewBtn);
+                }
+            } else {
+                alert('Error saving detection: ' + data.error);
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = '<i class="fas fa-save me-1"></i> Save to History';
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while saving the detection');
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = '<i class="fas fa-save me-1"></i> Save to History';
+            }
+        });
+    }
+</script>
+{% endblock %}
